@@ -24,7 +24,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<QrCodeGeneratorUtility>();
 builder.Services.AddScoped<ITicketService, TicketService.API.Services.TicketService>();
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepositoryDapper>();
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<TicketDbContext>(options => { options.UseSqlServer(connectionString); });
