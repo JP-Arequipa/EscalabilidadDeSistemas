@@ -8,7 +8,7 @@ public class RequestRouter(CustomServiceDiscovery serviceDiscovery, IHttpClientF
     public async Task<HttpResponseMessage> RedirectRequestAsync(string serviceName, string downstreamPath, HttpRequestMessage request, string queryString)
     {
         var serviceUri = await GetServiceUriAsync(serviceName);
-        Console.WriteLine(serviceUri);
+        Console.WriteLine($"SERVICE USED: {serviceUri}");
         var downstreamUrl = BuildDownstreamUrl(serviceUri, downstreamPath, queryString);
         var downstreamRequest = CreateDownstreamRequest(request, downstreamUrl);
 
