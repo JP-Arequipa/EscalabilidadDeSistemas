@@ -3,10 +3,12 @@
 public class RequestRouter(CustomServiceDiscovery serviceDiscovery, IHttpClientFactory httpClientFactory)
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
+    private static readonly Dictionary<string, int> _serviceIndices = new();
 
     public async Task<HttpResponseMessage> RedirectRequestAsync(string serviceName, string downstreamPath, HttpRequestMessage request, string queryString)
     {
         var serviceUri = await GetServiceUriAsync(serviceName);
+        Console.WriteLine(serviceUri);
         var downstreamUrl = BuildDownstreamUrl(serviceUri, downstreamPath, queryString);
         var downstreamRequest = CreateDownstreamRequest(request, downstreamUrl);
 
@@ -15,12 +17,13 @@ public class RequestRouter(CustomServiceDiscovery serviceDiscovery, IHttpClientF
 
     private async Task<string> GetServiceUriAsync(string serviceName)
     {
-        var serviceUri = await serviceDiscovery.GetServiceUriAsync(serviceName);
-        if (serviceUri == null)
+        var serviceUris = await serviceDiscovery.GetServiceUrisAsync(serviceName);
+        if (serviceUris == null || serviceUris.Count == 0)
         {
-            throw new Exception($"Service {serviceName} not found in the service registry.");
+            throw new Exception($"No instances found for service {serviceName}.");
         }
-        return serviceUri;
+
+        return GetNextInstance(serviceUris, serviceName);
     }
 
     private string BuildDownstreamUrl(string serviceUri, string downstreamPath, string queryString)
@@ -46,5 +49,17 @@ public class RequestRouter(CustomServiceDiscovery serviceDiscovery, IHttpClientF
     private async Task<HttpResponseMessage> SendDownstreamRequestAsync(HttpRequestMessage downstreamRequest)
     {
         return await _httpClient.SendAsync(downstreamRequest);
+    }
+    
+    private string GetNextInstance(List<string> instances, string serviceName)
+    {
+        if (!_serviceIndices.ContainsKey(serviceName))
+            _serviceIndices[serviceName] = 0;
+
+        var index = _serviceIndices[serviceName];
+        var instance = instances[index % instances.Count];
+        _serviceIndices[serviceName] = (index + 1) % instances.Count;
+
+        return instance;
     }
 }

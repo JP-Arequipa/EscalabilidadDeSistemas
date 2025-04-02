@@ -27,4 +27,11 @@ public class CustomServiceDiscovery
         var services = await GetServicesAsync();
         return services.ContainsKey(serviceName) ? services[serviceName].FirstOrDefault() : null;
     }
+    
+    public async Task<List<string>> GetServiceUrisAsync(string serviceName)
+    {
+        var services = await GetServicesAsync();
+        return services.ContainsKey(serviceName) ? services[serviceName] : new List<string>();
+    }
+
 }
